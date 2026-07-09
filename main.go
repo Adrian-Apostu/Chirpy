@@ -16,24 +16,28 @@ import (
 
 type apiConfig struct {
 	fileserverHits atomic.Int32
-	queries        *database.Queries
+	db             *database.Queries
 }
 
 func main() {
-	godotenv.Load(".env")
-
 	const port = "8080"
 	const filepathRoot = "."
+
+	godotenv.Load()
 	dbURL := os.Getenv("DB_URL")
-	db, err := sql.Open("postgres", dbURL)
-	if err != nil {
-		log.Printf("failed to open db connection: %v", err)
+	if dbURL == "" {
+		log.Fatal("DB_URL must be set")
 	}
-	dbQueries := database.New(db)
+
+	dbConn, err := sql.Open("postgres", dbURL)
+	if err != nil {
+		log.Printf("Error opening database: %s", err)
+	}
+	dbQueries := database.New(dbConn)
 
 	apiCfg := &apiConfig{
 		fileserverHits: atomic.Int32{},
-		queries:        dbQueries,
+		db:             dbQueries,
 	}
 
 	mux := http.NewServeMux()
