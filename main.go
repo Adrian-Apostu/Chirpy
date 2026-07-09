@@ -1,6 +1,14 @@
 package main
 
 import (
+	"chirpy/internal/database"
+	"database/sql"
+	"os"
+
+	"github.com/joho/godotenv"
+	_ "github.com/lib/pq"
+)
+import (
 	"log"
 	"net/http"
 	"sync/atomic"
@@ -8,14 +16,24 @@ import (
 
 type apiConfig struct {
 	fileserverHits atomic.Int32
+	queries        *database.Queries
 }
 
 func main() {
+	godotenv.Load(".env")
+
 	const port = "8080"
 	const filepathRoot = "."
+	dbURL := os.Getenv("DB_URL")
+	db, err := sql.Open("postgres", dbURL)
+	if err != nil {
+		log.Printf("failed to open db connection: %v", err)
+	}
+	dbQueries := database.New(db)
 
 	apiCfg := &apiConfig{
 		fileserverHits: atomic.Int32{},
+		queries:        dbQueries,
 	}
 
 	mux := http.NewServeMux()
