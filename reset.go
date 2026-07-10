@@ -1,12 +1,20 @@
 package main
 
 import (
-	"fmt"
 	"net/http"
 )
 
 func (cfg *apiConfig) handlerReset(w http.ResponseWriter, r *http.Request) {
-	cfg.fileserverHits.Store(0)
-	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
-	fmt.Fprintf(w, "Hits reset to 0")
+	if cfg.platform != "dev" {
+		respondWithError(w, http.StatusForbidden, "forbidden in this environment")
+		return
+	}
+
+	err := cfg.db.ResetUsers(r.Context())
+	if err != nil {
+		respondWithError(w, http.StatusInternalServerError, "Failed to reset users")
+		return
+	}
+
+	respondWithJSON(w, http.StatusOK, nil)
 }
