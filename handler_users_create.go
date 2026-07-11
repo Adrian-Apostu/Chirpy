@@ -2,7 +2,6 @@ package main
 
 import (
 	"encoding/json"
-	"log"
 	"net/http"
 )
 
@@ -21,7 +20,6 @@ func (cfg *apiConfig) handlerCreateUser(w http.ResponseWriter, r *http.Request) 
 
 	newUser, err := cfg.db.CreateUser(r.Context(), params.Email)
 	if err != nil {
-		log.Printf("Error creating user: %s", err)
 		respondWithError(w, http.StatusInternalServerError, "Unexpected error occured creating user")
 		return
 	}
